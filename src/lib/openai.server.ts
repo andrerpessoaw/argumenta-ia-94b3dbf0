@@ -1,7 +1,10 @@
 // Cliente da API global da OpenAI (api.openai.com), usada por todo o app.
 // A chave fica somente no servidor, em OPENAI_API_KEY.
 
-export const MODELO_PADRAO = process.env["OPENAI_MODEL"] || "gpt-5";
+// Lido dentro do handler: variáveis de ambiente só existem em tempo de execução.
+function modelo() {
+  return process.env["OPENAI_MODEL"] || "gpt-5";
+}
 
 type Mensagem = { role: "system" | "user"; content: string };
 
@@ -22,7 +25,7 @@ export async function pedirTextoOpenAI(args: {
       Authorization: `Bearer ${args.apiKey}`,
     },
     body: JSON.stringify({
-      model: MODELO_PADRAO,
+      model: modelo(),
       input: args.input,
       reasoning: { effort: args.esforco ?? "low" },
       stream: true,

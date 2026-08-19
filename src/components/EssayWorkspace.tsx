@@ -52,6 +52,20 @@ export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  // Chromebook: rascunho salvo no próprio aparelho, para não perder o texto se a
+  // aba fechar, a bateria acabar ou a rede da escola cair.
+  useEffect(() => {
+    const salvo = window.localStorage.getItem(`rascunho-${modo}`);
+    if (salvo) setRedacao(salvo);
+  }, [modo]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      window.localStorage.setItem(`rascunho-${modo}`, redacao);
+    }, 600);
+    return () => window.clearTimeout(id);
+  }, [redacao, modo]);
+
   const corrigir = useServerFn(corrigirRedacao);
   const novoTema = useServerFn(gerarTema);
 
@@ -239,7 +253,7 @@ export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
             value={redacao}
             onChange={(event) => setRedacao(event.target.value)}
             placeholder="Digite sua redação aqui..."
-            className="essay-textarea min-h-[520px] resize-none border-0 bg-transparent px-0 py-0 text-base leading-[2.05rem] shadow-none focus-visible:ring-0"
+            className="essay-textarea min-h-[340px] sm:min-h-[420px] lg:min-h-[520px] resize-none border-0 bg-transparent px-0 py-0 text-base leading-[2.05rem] shadow-none focus-visible:ring-0"
           />
         </article>
 
