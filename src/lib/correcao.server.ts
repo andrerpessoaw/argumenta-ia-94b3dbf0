@@ -82,5 +82,30 @@ export async function corrigirComIA(args: {
     ],
   });
 
-  return extrairJson<CorrecaoIA>(texto, "Não foi possível interpretar a correção gerada.");
+  const correcao = extrairJson<CorrecaoIA>(texto, "Não foi possível interpretar a correção gerada.");
+
+  // Garantia: se a versão corrigida foi pedida e o modelo não a devolveu, pedimos só ela.
+  if (args.pedirVersaoCorrigida && !correcao.versaoCorrigida?.trim()) {
+    const reescrita = await pedirTextoOpenAI({
+      apiKey: args.apiKey,
+      esforco: "medium",
+      input: [
+        {
+          role: "system",
+          content:
+            "Você reescreve redações do ENEM seguindo as orientações abaixo. Responda APENAS com o texto " +
+            "da redação reescrita, em 4 parágrafos separados por linha em branco, sem títulos, sem markdown " +
+            "e sem comentários.\n\n" +
+            GUIA_CORRECAO.split("RESPONDA SOMENTE COM UM JSON")[0],
+        },
+        {
+          role: "user",
+          content: `TEMA: ${args.tema}\n\nREDAÇÃO ORIGINAL:\n${args.texto}`,
+        },
+      ],
+    });
+    correcao.versaoCorrigida = reescrita.trim();
+  }
+
+  return correcao;
 }
