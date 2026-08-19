@@ -1,3 +1,5 @@
+import { extrairJson, pedirTextoOpenAI } from "./openai.server";
+
 export const GUIA_CORRECAO = `
 Você é um corretor de redações do ENEM. Use como referência obrigatória as orientações
 da correção modelo abaixo (feita por uma professora para o aluno André).
@@ -62,80 +64,19 @@ export async function corrigirComIA(args: {
   pedirVersaoCorrigida: boolean;
   apiKey: string;
 }): Promise<CorrecaoIA> {
-  const input = [
-    { role: "system", content: GUIA_CORRECAO },
-    {
-      role: "user",
-      content: `TEMA: ${args.tema}\n\nVERSÃO CORRIGIDA SOLICITADA: ${
-        args.pedirVersaoCorrigida ? "sim" : "não"
-      }\n\nREDAÇÃO DO ESTUDANTE:\n${args.texto}`,
-    },
-  ];
-
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": args.apiKey,
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-5.6-sol",
-      input,
-      reasoning: { effort: "low" },
-      stream: true,
-    }),
+  const texto = await pedirTextoOpenAI({
+    apiKey: args.apiKey,
+    esforco: "medium",
+    input: [
+      { role: "system", content: GUIA_CORRECAO },
+      {
+        role: "user",
+        content: `TEMA: ${args.tema}\n\nVERSÃO CORRIGIDA SOLICITADA: ${
+          args.pedirVersaoCorrigida ? "sim" : "não"
+        }\n\nREDAÇÃO DO ESTUDANTE:\n${args.texto}`,
+      },
+    ],
   });
 
-  if (!response.ok || !response.body) {
-    const detail = await response.text().catch(() => "");
-    if (response.status === 402) {
-      throw new Error(
-        "Os créditos de IA da plataforma acabaram. Recarregue os créditos no painel da Lovable para voltar a corrigir redações.",
-      );
-    }
-    if (response.status === 429) {
-      throw new Error("Muitas correções em pouco tempo. Aguarde alguns instantes e tente de novo.");
-    }
-    console.error("[correcao] erro do gateway:", response.status, detail.slice(0, 300));
-    throw new Error("Não foi possível corrigir agora. Tente novamente em alguns instantes.");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let texto = "";
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const linhas = buffer.split("\n");
-    buffer = linhas.pop() ?? "";
-    for (const linha of linhas) {
-      const trimmed = linha.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      try {
-        const evento = JSON.parse(payload) as {
-          type?: string;
-          delta?: string;
-          response?: { output_text?: string };
-        };
-        if (evento.type === "response.output_text.delta" && typeof evento.delta === "string") {
-          texto += evento.delta;
-        }
-      } catch {
-        // ignora chunks parciais
-      }
-    }
-  }
-
-  const inicio = texto.indexOf("{");
-  const fim = texto.lastIndexOf("}");
-  if (inicio === -1 || fim === -1) {
-    throw new Error("Não foi possível interpretar a correção gerada.");
-  }
-
-  return JSON.parse(texto.slice(inicio, fim + 1)) as CorrecaoIA;
+  return extrairJson<CorrecaoIA>(texto, "Não foi possível interpretar a correção gerada.");
 }

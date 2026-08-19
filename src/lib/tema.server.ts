@@ -1,3 +1,5 @@
+import { extrairJson, pedirTextoOpenAI } from "./openai.server";
+
 export type TemaGerado = {
   titulo: string;
   eixo: string;
@@ -37,69 +39,21 @@ export async function gerarTemaComIA(args: {
   apiKey: string;
   temasAnteriores: string[];
 }): Promise<TemaGerado> {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": args.apiKey,
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-5.6-sol",
-      input: [
-        { role: "system", content: GUIA_TEMA },
-        {
-          role: "user",
-          content: `Temas já usados (não repita nem crie variações próximas):\n${
-            args.temasAnteriores.length ? args.temasAnteriores.join("\n") : "(nenhum)"
-          }\n\nGere um novo tema agora. Semente de variação: ${Math.random()
-            .toString(36)
-            .slice(2)}`,
-        },
-      ],
-      reasoning: { effort: "low" },
-      stream: true,
-    }),
+  const texto = await pedirTextoOpenAI({
+    apiKey: args.apiKey,
+    esforco: "low",
+    input: [
+      { role: "system", content: GUIA_TEMA },
+      {
+        role: "user",
+        content: `Temas já usados (não repita nem crie variações próximas):\n${
+          args.temasAnteriores.length ? args.temasAnteriores.join("\n") : "(nenhum)"
+        }\n\nGere um novo tema agora. Semente de variação: ${Math.random().toString(36).slice(2)}`,
+      },
+    ],
   });
 
-  if (!response.ok || !response.body) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`Falha ao gerar tema (${response.status}): ${detail.slice(0, 200)}`);
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let texto = "";
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const linhas = buffer.split("\n");
-    buffer = linhas.pop() ?? "";
-    for (const linha of linhas) {
-      const trimmed = linha.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      try {
-        const evento = JSON.parse(payload) as { type?: string; delta?: string };
-        if (evento.type === "response.output_text.delta" && typeof evento.delta === "string") {
-          texto += evento.delta;
-        }
-      } catch {
-        // chunk parcial
-      }
-    }
-  }
-
-  const inicio = texto.indexOf("{");
-  const fim = texto.lastIndexOf("}");
-  if (inicio === -1 || fim === -1) {
-    throw new Error("Não foi possível interpretar o tema gerado.");
-  }
-
-  const tema = JSON.parse(texto.slice(inicio, fim + 1)) as TemaGerado;
+  const tema = extrairJson<TemaGerado>(texto, "Não foi possível interpretar o tema gerado.");
   return {
     titulo: String(tema.titulo ?? "").trim(),
     eixo: String(tema.eixo ?? "").trim(),
