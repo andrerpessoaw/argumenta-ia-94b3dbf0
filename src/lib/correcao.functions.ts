@@ -24,16 +24,12 @@ export const corrigirRedacao = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const apiKey = process.env["OPENAI_API_KEY"];
 
-    if (apiKey) {
-      try {
-        const { corrigirComIA } = await import("./correcao.server");
-        return await corrigirComIA({ ...data, apiKey });
-      } catch (error) {
-        console.error("[correcao] falha na IA, usando correção local:", error);
-      }
+    if (!apiKey) {
+      throw new Error(
+        "A correção por IA está indisponível: falta configurar a chave da OpenAI (OPENAI_API_KEY).",
+      );
     }
 
-    // Fallback: correção estimada local, para o estudante nunca ficar sem retorno.
-    const { corrigirLocalmente } = await import("./correcao-local");
-    return corrigirLocalmente(data.tema, data.texto);
+    const { corrigirComIA } = await import("./correcao.server");
+    return await corrigirComIA({ ...data, apiKey });
   });

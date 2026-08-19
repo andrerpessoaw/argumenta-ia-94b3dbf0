@@ -39,10 +39,14 @@ RESPONDA SOMENTE COM UM JSON VÁLIDO neste formato (sem markdown, sem texto fora
   "competencias": [{ "nome": "Competência 1", "nota": 0, "comentario": "texto" }],
   "paragrafos": [{ "titulo": "Introdução", "comentarios": ["texto"], "paragrafoIdeal": "texto ou vazio" }],
   "tabela": [{ "trecho": "trecho original", "problema": "texto", "sugestao": "texto" }],
-  "versaoCorrigida": "texto completo ou string vazia se não solicitada",
+  "versaoCorrigida": "texto completo da redação reescrita, ou string vazia se não solicitada",
   "checklist": [{ "item": "Introdução com repertório, tese e fechamento", "ok": true, "observacao": "texto" }]
 }
 Notas por competência de 0 a 200 (múltiplos de 20) e notaTotal = soma delas.
+Quando "VERSÃO CORRIGIDA SOLICITADA: sim", o campo "versaoCorrigida" é OBRIGATÓRIO e deve conter a
+redação inteira reescrita (4 parágrafos completos, em texto corrido, parágrafos separados por \\n\\n),
+preservando as ideias do estudante e aplicando todas as correções apontadas. Nunca devolva resumo,
+comentário ou string vazia nesse caso.
 O checklist deve cobrir: os 4 parágrafos, os 3 períodos de cada um, e cada elemento da proposta
 de intervenção (agente, detalhamento entre travessões, ação, meio, finalidade).
 Escreva tudo em português do Brasil.
