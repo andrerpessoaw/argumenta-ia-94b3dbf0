@@ -1,24 +1,67 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { supabase } from "@/integrations/supabase/client";
+
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Argumenta | Treino e correção de redação" },
+      {
+        name: "description",
+        content:
+          "Plataforma de treino de redação ENEM: videoaulas, tutoriais, temas gerados por IA e correção comentada por competências.",
+      },
+      { property: "og:title", content: "Argumenta | Treino e correção de redação" },
+      {
+        property: "og:description",
+        content: "Aprenda a redigir, treine com temas do estilo ENEM e receba correção comentada.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
+  async function entrar() {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      window.location.href = "/inicio";
+      return;
+    }
+    window.location.href = "/auth";
+  }
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+      <div className="max-w-2xl space-y-6 text-center">
+        <p className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          laboratório de redação
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+          Aprenda, escreva e receba correção no padrão ENEM.
+        </h1>
+        <p className="text-base leading-7 text-muted-foreground sm:text-lg">
+          Videoaulas e tutoriais para aprender a redigir, temas gerados por IA ou escolhidos por você e correção
+          comentada por competências.
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => void entrar()}
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+          >
+            Entrar na plataforma
+          </button>
+          <Link
+            to="/auth"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium transition hover:bg-accent"
+          >
+            Criar conta
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }
