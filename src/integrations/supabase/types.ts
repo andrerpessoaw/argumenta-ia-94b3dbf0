@@ -14,16 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conteudos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          ordem: number
+          texto: string | null
+          tipo: string
+          titulo: string
+          youtube_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          texto?: string | null
+          tipo?: string
+          titulo: string
+          youtube_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          texto?: string | null
+          tipo?: string
+          titulo?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          nome?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+        }
+        Relationships: []
+      }
+      redacoes: {
+        Row: {
+          competencias: Json
+          created_at: string
+          id: string
+          linhas: number
+          nota_total: number
+          palavras: number
+          paragrafos: number
+          tema: string
+          texto: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competencias?: Json
+          created_at?: string
+          id?: string
+          linhas?: number
+          nota_total?: number
+          palavras?: number
+          paragrafos?: number
+          tema: string
+          texto: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competencias?: Json
+          created_at?: string
+          id?: string
+          linhas?: number
+          nota_total?: number
+          palavras?: number
+          paragrafos?: number
+          tema?: string
+          texto?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +272,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
