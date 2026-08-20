@@ -4,6 +4,7 @@ import { ChevronDown, User } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSessao } from "@/hooks/useSessao";
+import { alternarModoLeve, useModoLeve } from "@/hooks/useModoLeve";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ const LINK_ACTIVE = "rounded-md px-3 py-2 bg-nav-active text-nav-foreground";
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, isAdmin } = useSessao();
   const navigate = useNavigate();
+  const modoLeve = useModoLeve();
 
   async function sair() {
     await supabase.auth.signOut();
@@ -55,6 +57,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
+            <button
+              type="button"
+              onClick={() => alternarModoLeve()}
+              title="Reduz animações e gráficos pesados para funcionar bem em Chromebooks antigos"
+              className="hidden rounded-md border border-nav-muted/40 px-3 py-1.5 text-xs font-medium text-nav-muted hover:text-nav-foreground sm:inline-flex"
+            >
+              Modo leve: {modoLeve ? "ligado" : "desligado"}
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 rounded-full bg-nav-active px-2 py-1.5 pr-3 text-nav-foreground transition hover:opacity-90">
                 <span className="flex size-7 items-center justify-center rounded-full bg-brand-cyan/20 text-brand-cyan">
