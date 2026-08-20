@@ -22,11 +22,11 @@ export const corrigirRedacao = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
-    const apiKey = process.env["OPENAI_API_KEY"];
+    const apiKey = process.env["LOVABLE_API_KEY"];
 
     if (!apiKey) {
       throw new Error(
-        "A correção por IA está indisponível: falta configurar a chave da OpenAI (OPENAI_API_KEY).",
+        "A correção por IA está temporariamente indisponível por falta de configuração.",
       );
     }
 

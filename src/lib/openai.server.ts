@@ -1,10 +1,8 @@
-// Cliente da API global da OpenAI (api.openai.com), usada por todo o app.
-// A chave fica somente no servidor, em OPENAI_API_KEY.
+import { streamText } from "ai";
 
-// Lido dentro do handler: variáveis de ambiente só existem em tempo de execução.
-function modelo() {
-  return process.env["OPENAI_MODEL"] || "gpt-5";
-}
+import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+
+const MODELO = "google/gemini-2.5-flash";
 
 type Mensagem = { role: "system" | "user"; content: string };
 
@@ -19,83 +17,29 @@ export async function pedirTextoOpenAI(args: {
   sinal?: AbortSignal;
   formatoJson?: { nome: string; schema: Record<string, unknown> };
 }): Promise<string> {
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${args.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: modelo(),
-      input: args.input,
-      reasoning: { effort: args.esforco ?? "low" },
-      stream: true,
-      store: false,
-      ...(args.formatoJson
-        ? {
-            text: {
-              format: {
-                type: "json_schema",
-                name: args.formatoJson.nome,
-                strict: true,
-                schema: args.formatoJson.schema,
-              },
-            },
-          }
-        : {}),
-    }),
-    ...(args.sinal ? { signal: args.sinal } : {}),
-  });
+  const gateway = createLovableAiGatewayProvider(args.apiKey);
+  const schemaInstruction = args.formatoJson
+    ? `\n\nRetorne somente JSON válido conforme este JSON Schema: ${JSON.stringify(args.formatoJson.schema)}`
+    : "";
 
-  if (!response.ok || !response.body) {
-    const detalhe = await response.text().catch(() => "");
-    if (response.status === 401) {
-      throw new Error(
-        "A chave da OpenAI não foi aceita. Confira a chave configurada no app.",
-      );
-    }
-    if (response.status === 429) {
-      if (detalhe.includes("insufficient_quota")) {
-        throw new Error(
-          "A conta da OpenAI está sem créditos disponíveis. Adicione créditos em platform.openai.com (Billing) para liberar a correção.",
-        );
-      }
-      throw new Error(
-        "A OpenAI está limitando as requisições (ou os créditos acabaram). Aguarde um instante e tente de novo.",
-      );
-    }
-    console.error("[openai] erro:", response.status, detalhe.slice(0, 300));
-    throw new Error("Não foi possível falar com a IA agora. Tente novamente em alguns instantes.");
+  try {
+    const result = streamText({
+      model: gateway(MODELO),
+      messages: args.input.map((mensagem, indice) => ({
+        role: mensagem.role,
+        content: indice === 0 ? `${mensagem.content}${schemaInstruction}` : mensagem.content,
+      })),
+      maxRetries: 2,
+      ...(args.sinal ? { abortSignal: args.sinal } : {}),
+    });
+    const texto = await result.text;
+    if (!texto.trim()) throw new Error("A IA concluiu a análise sem gerar texto. Tente novamente.");
+    return texto;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    const mensagem = error instanceof Error ? error.message : String(error);
+    throw new Error(`Não foi possível concluir a correção: ${mensagem}`);
   }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let texto = "";
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const linhas = buffer.split("\n");
-    buffer = linhas.pop() ?? "";
-    for (const linha of linhas) {
-      const trimmed = linha.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const payload = trimmed.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      try {
-        const evento = JSON.parse(payload) as { type?: string; delta?: string };
-        if (evento.type === "response.output_text.delta" && typeof evento.delta === "string") {
-          texto += evento.delta;
-        }
-      } catch {
-        // chunk parcial
-      }
-    }
-  }
-
-  return texto;
 }
 
 /** Extrai o primeiro objeto JSON válido da resposta do modelo. */
