@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { corrigirRedacao, type CorrecaoIA } from "@/lib/correcao.functions";
 import { gerarTema, type TemaGerado } from "@/lib/tema.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { useModoLeve } from "@/hooks/useModoLeve";
 
 const TEMA_INICIAL: TemaGerado = {
   titulo: "Desafios para combater a desinformação digital no Brasil",
@@ -41,6 +42,7 @@ function estimateLines(texto: string) {
 }
 
 export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
+  const modoLeve = useModoLeve();
   const [temaAtual, setTemaAtual] = useState<TemaGerado>(TEMA_INICIAL);
   const [temaLivre, setTemaLivre] = useState("");
   const [historicoTemas, setHistoricoTemas] = useState<string[]>([TEMA_INICIAL.titulo]);
@@ -70,9 +72,18 @@ export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
   const novoTema = useServerFn(gerarTema);
 
   const textoDiferido = useDeferredValue(redacao);
-  const palavras = useMemo(() => countWords(textoDiferido), [textoDiferido]);
-  const paragrafos = useMemo(() => splitParagraphs(textoDiferido).length, [textoDiferido]);
-  const linhas = useMemo(() => estimateLines(textoDiferido), [textoDiferido]);
+  const [textoContado, setTextoContado] = useState("");
+
+  // Em Chromebooks fracos, recontar a cada tecla trava a digitação: espera uma
+  // pausa curta antes de recalcular palavras/parágrafos/linhas.
+  useEffect(() => {
+    const id = window.setTimeout(() => setTextoContado(textoDiferido), modoLeve ? 450 : 120);
+    return () => window.clearTimeout(id);
+  }, [textoDiferido, modoLeve]);
+
+  const palavras = useMemo(() => countWords(textoContado), [textoContado]);
+  const paragrafos = useMemo(() => splitParagraphs(textoContado).length, [textoContado]);
+  const linhas = useMemo(() => estimateLines(textoContado), [textoContado]);
 
 
   const temaEscolhido = modo === "ia" ? temaAtual.titulo : temaLivre.trim();
@@ -258,6 +269,9 @@ export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
             value={redacao}
             onChange={(event) => setRedacao(event.target.value)}
             placeholder="Digite sua redação aqui..."
+            spellCheck={!modoLeve}
+            autoComplete="off"
+            autoCorrect="off"
             className="essay-textarea min-h-[340px] sm:min-h-[420px] lg:min-h-[520px] resize-none border-0 bg-transparent px-0 py-0 text-base leading-[2.05rem] shadow-none focus-visible:ring-0"
           />
         </article>
