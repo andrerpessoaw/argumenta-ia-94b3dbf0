@@ -21,14 +21,14 @@ export async function pedirTextoOpenAI(args: {
   const schemaInstruction = args.formatoJson
     ? `\n\nRetorne somente JSON válido conforme este JSON Schema: ${JSON.stringify(args.formatoJson.schema)}`
     : "";
+  const systemMessage = args.input.find((mensagem) => mensagem.role === "system");
+  const userMessages = args.input.filter((mensagem) => mensagem.role === "user");
 
   try {
     const result = streamText({
       model: gateway(MODELO),
-      messages: args.input.map((mensagem, indice) => ({
-        role: mensagem.role,
-        content: indice === 0 ? `${mensagem.content}${schemaInstruction}` : mensagem.content,
-      })),
+      instructions: `${systemMessage?.content ?? ""}${schemaInstruction}`,
+      messages: userMessages,
       maxRetries: 2,
       ...(args.sinal ? { abortSignal: args.sinal } : {}),
     });
