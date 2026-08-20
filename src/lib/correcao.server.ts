@@ -154,6 +154,10 @@ export async function corrigirComIA(args: {
     ],
   });
 
+  if (!texto.trim()) {
+    throw new Error("A IA não devolveu nenhuma resposta. Tente novamente em alguns instantes.");
+  }
+
   const correcao = extrairJson<CorrecaoIA>(texto, "Não foi possível interpretar a correção gerada.");
 
   // Garantia: se a versão corrigida foi pedida e o modelo não a devolveu, pedimos só ela.
