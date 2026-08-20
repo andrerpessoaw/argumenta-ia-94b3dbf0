@@ -17,6 +17,7 @@ import { Route as AuthenticatedAprenderRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDesempenhoRouteImport } from './routes/_authenticated/desempenho'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
+import { Route as ApiAiHealthRouteImport } from './routes/api/ai-health'
 import { Route as AuthenticatedRedacaoIndexRouteImport } from './routes/_authenticated/redacao/index'
 import { Route as AuthenticatedRedacaoTemaIaRouteImport } from './routes/_authenticated/redacao/tema-ia'
 import { Route as AuthenticatedRedacaoTemaLivreRouteImport } from './routes/_authenticated/redacao/tema-livre'
@@ -60,6 +61,11 @@ const AuthenticatedInicioRoute = AuthenticatedInicioRouteImport.update({
   path: '/inicio',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAiHealthRoute = ApiAiHealthRouteImport.update({
+  id: '/api/ai-health',
+  path: '/api/ai-health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRedacaoIndexRoute =
   AuthenticatedRedacaoIndexRouteImport.update({
     id: '/redacao/',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/desempenho': typeof AuthenticatedDesempenhoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/inicio': typeof AuthenticatedInicioRoute
+  '/api/ai-health': typeof ApiAiHealthRoute
   '/redacao/tema-ia': typeof AuthenticatedRedacaoTemaIaRoute
   '/redacao/tema-livre': typeof AuthenticatedRedacaoTemaLivreRoute
   '/redacao/': typeof AuthenticatedRedacaoIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/desempenho': typeof AuthenticatedDesempenhoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/inicio': typeof AuthenticatedInicioRoute
+  '/api/ai-health': typeof ApiAiHealthRoute
   '/redacao/tema-ia': typeof AuthenticatedRedacaoTemaIaRoute
   '/redacao/tema-livre': typeof AuthenticatedRedacaoTemaLivreRoute
   '/redacao': typeof AuthenticatedRedacaoIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/desempenho': typeof AuthenticatedDesempenhoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
+  '/api/ai-health': typeof ApiAiHealthRoute
   '/_authenticated/redacao/tema-ia': typeof AuthenticatedRedacaoTemaIaRoute
   '/_authenticated/redacao/tema-livre': typeof AuthenticatedRedacaoTemaLivreRoute
   '/_authenticated/redacao/': typeof AuthenticatedRedacaoIndexRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/desempenho'
     | '/historico'
     | '/inicio'
+    | '/api/ai-health'
     | '/redacao/tema-ia'
     | '/redacao/tema-livre'
     | '/redacao/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/desempenho'
     | '/historico'
     | '/inicio'
+    | '/api/ai-health'
     | '/redacao/tema-ia'
     | '/redacao/tema-livre'
     | '/redacao'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/desempenho'
     | '/_authenticated/historico'
     | '/_authenticated/inicio'
+    | '/api/ai-health'
     | '/_authenticated/redacao/tema-ia'
     | '/_authenticated/redacao/tema-livre'
     | '/_authenticated/redacao/'
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiAiHealthRoute: typeof ApiAiHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInicioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/ai-health': {
+      id: '/api/ai-health'
+      path: '/api/ai-health'
+      fullPath: '/api/ai-health'
+      preLoaderRoute: typeof ApiAiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/redacao/': {
       id: '/_authenticated/redacao/'
       path: '/redacao'
@@ -274,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiAiHealthRoute: ApiAiHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
