@@ -71,6 +71,7 @@ export async function corrigirComIA(args: {
   const texto = await pedirTextoOpenAI({
     apiKey: args.apiKey,
     esforco: "medium",
+    formatoJson: { nome: "correcao_enem", schema: SCHEMA_CORRECAO },
     input: [
       { role: "system", content: GUIA_CORRECAO },
       {
