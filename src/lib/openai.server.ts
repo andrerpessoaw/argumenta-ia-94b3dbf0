@@ -55,6 +55,11 @@ export async function pedirTextoOpenAI(args: {
       );
     }
     if (response.status === 429) {
+      if (detalhe.includes("insufficient_quota")) {
+        throw new Error(
+          "A conta da OpenAI está sem créditos disponíveis. Adicione créditos em platform.openai.com (Billing) para liberar a correção.",
+        );
+      }
       throw new Error(
         "A OpenAI está limitando as requisições (ou os créditos acabaram). Aguarde um instante e tente de novo.",
       );
