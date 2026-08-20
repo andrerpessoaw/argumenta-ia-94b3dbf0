@@ -62,6 +62,77 @@ export type CorrecaoIA = {
   checklist: { item: string; ok: boolean; observacao?: string }[];
 };
 
+const SCHEMA_CORRECAO: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "avaliacaoGeral",
+    "notaTotal",
+    "competencias",
+    "paragrafos",
+    "tabela",
+    "versaoCorrigida",
+    "checklist",
+  ],
+  properties: {
+    avaliacaoGeral: { type: "string" },
+    notaTotal: { type: "number" },
+    competencias: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["nome", "nota", "comentario"],
+        properties: {
+          nome: { type: "string" },
+          nota: { type: "number" },
+          comentario: { type: "string" },
+        },
+      },
+    },
+    paragrafos: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["titulo", "comentarios", "paragrafoIdeal"],
+        properties: {
+          titulo: { type: "string" },
+          comentarios: { type: "array", items: { type: "string" } },
+          paragrafoIdeal: { type: ["string", "null"] },
+        },
+      },
+    },
+    tabela: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["trecho", "problema", "sugestao"],
+        properties: {
+          trecho: { type: "string" },
+          problema: { type: "string" },
+          sugestao: { type: "string" },
+        },
+      },
+    },
+    versaoCorrigida: { type: ["string", "null"] },
+    checklist: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["item", "ok", "observacao"],
+        properties: {
+          item: { type: "string" },
+          ok: { type: "boolean" },
+          observacao: { type: ["string", "null"] },
+        },
+      },
+    },
+  },
+};
+
 export async function corrigirComIA(args: {
   tema: string;
   texto: string;
