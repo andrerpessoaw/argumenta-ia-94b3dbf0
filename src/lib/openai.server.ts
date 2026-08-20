@@ -17,6 +17,7 @@ export async function pedirTextoOpenAI(args: {
   input: Mensagem[];
   esforco?: "low" | "medium" | "high";
   sinal?: AbortSignal;
+  formatoJson?: { nome: string; schema: Record<string, unknown> };
 }): Promise<string> {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -30,6 +31,18 @@ export async function pedirTextoOpenAI(args: {
       reasoning: { effort: args.esforco ?? "low" },
       stream: true,
       store: false,
+      ...(args.formatoJson
+        ? {
+            text: {
+              format: {
+                type: "json_schema",
+                name: args.formatoJson.nome,
+                strict: true,
+                schema: args.formatoJson.schema,
+              },
+            },
+          }
+        : {}),
     }),
     ...(args.sinal ? { signal: args.sinal } : {}),
   });
@@ -42,6 +55,11 @@ export async function pedirTextoOpenAI(args: {
       );
     }
     if (response.status === 429) {
+      if (detalhe.includes("insufficient_quota")) {
+        throw new Error(
+          "A conta da OpenAI está sem créditos disponíveis. Adicione créditos em platform.openai.com (Billing) para liberar a correção.",
+        );
+      }
       throw new Error(
         "A OpenAI está limitando as requisições (ou os créditos acabaram). Aguarde um instante e tente de novo.",
       );
@@ -84,6 +102,44 @@ export async function pedirTextoOpenAI(args: {
 export function extrairJson<T>(texto: string, mensagemErro: string): T {
   const inicio = texto.indexOf("{");
   const fim = texto.lastIndexOf("}");
-  if (inicio === -1 || fim === -1) throw new Error(mensagemErro);
-  return JSON.parse(texto.slice(inicio, fim + 1)) as T;
+  if (inicio === -1 || fim === -1 || fim < inicio) throw new Error(mensagemErro);
+  const bruto = texto.slice(inicio, fim + 1);
+  try {
+    return JSON.parse(bruto) as T;
+  } catch {
+    // Modelos às vezes emitem quebras de linha reais dentro das strings.
+    try {
+      return JSON.parse(escaparControlesEmStrings(bruto)) as T;
+    } catch {
+      throw new Error(mensagemErro);
+    }
+  }
+}
+
+function escaparControlesEmStrings(json: string) {
+  let dentro = false;
+  let escapado = false;
+  let saida = "";
+  for (const char of json) {
+    if (escapado) {
+      saida += char;
+      escapado = false;
+      continue;
+    }
+    if (char === "\\") {
+      saida += char;
+      escapado = dentro;
+      continue;
+    }
+    if (char === '"') {
+      dentro = !dentro;
+      saida += char;
+      continue;
+    }
+    if (dentro && char === "\n") saida += "\\n";
+    else if (dentro && char === "\r") saida += "\\r";
+    else if (dentro && char === "\t") saida += "\\t";
+    else saida += char;
+  }
+  return saida;
 }
