@@ -109,18 +109,23 @@ export function EssayWorkspace({ modo }: { modo: "ia" | "livre" }) {
         data: { tema: temaEscolhido, texto: redacao, pedirVersaoCorrigida },
       });
       setCorrecao(resultado);
-      const { data: auth } = await supabase.auth.getUser();
-      if (auth.user) {
-        await supabase.from("redacoes").insert({
-          user_id: auth.user.id,
-          tema: temaEscolhido,
-          texto: redacao,
-          nota_total: Math.round(resultado.notaTotal ?? 0),
-          competencias: (resultado.competencias ?? []).map((c) => ({ nome: c.nome, nota: c.nota })),
-          palavras,
-          paragrafos,
-          linhas,
-        });
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (auth.user) {
+          const { error: erroAoSalvar } = await supabase.from("redacoes").insert({
+            user_id: auth.user.id,
+            tema: temaEscolhido,
+            texto: redacao,
+            nota_total: Math.round(resultado.notaTotal ?? 0),
+            competencias: (resultado.competencias ?? []).map((c) => ({ nome: c.nome, nota: c.nota })),
+            palavras,
+            paragrafos,
+            linhas,
+          });
+          if (erroAoSalvar) console.error("[redacao] correção concluída, mas o histórico não foi salvo:", erroAoSalvar);
+        }
+      } catch (erroAoSalvar) {
+        console.error("[redacao] correção concluída, mas o histórico não foi salvo:", erroAoSalvar);
       }
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível corrigir agora.");
