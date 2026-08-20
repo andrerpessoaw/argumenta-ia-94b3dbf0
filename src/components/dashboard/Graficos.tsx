@@ -1,7 +1,11 @@
-import { memo } from "react";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { lazy, memo, Suspense } from "react";
 
 import { formatarData, mediaCompetencias, type RedacaoRegistro } from "@/hooks/useRedacoes";
+import { useModoLeve } from "@/hooks/useModoLeve";
+
+// O gráfico (recharts) só é baixado quando realmente vai aparecer — em
+// Chromebooks fracos ele nem chega a ser carregado.
+const EvolucaoNotaChart = lazy(() => import("./EvolucaoNotaChart"));
 
 export const CORES_COMPETENCIAS = ["var(--comp-1)", "var(--comp-2)", "var(--comp-3)", "var(--comp-4)", "var(--comp-5)"];
 
@@ -11,6 +15,7 @@ function Vazio({ texto }: { texto: string }) {
 
 export const EvolucaoNota = memo(function EvolucaoNota({ redacoes }: { redacoes: RedacaoRegistro[] }) {
   const dados = redacoes.map((r) => ({ data: formatarData(r.created_at), nota: r.nota_total }));
+  const modoLeve = useModoLeve();
 
   return (
     <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -18,31 +23,28 @@ export const EvolucaoNota = memo(function EvolucaoNota({ redacoes }: { redacoes:
       <p className="mt-1 text-xs text-muted-foreground">Notas estimadas das suas redações (0 a 1000).</p>
       {dados.length === 0 ? (
         <Vazio texto="Envie sua primeira redação para ver a evolução da nota aqui." />
+      ) : modoLeve ? (
+        <ul className="mt-4 space-y-2">
+          {dados.slice(-8).map((item, i) => (
+            <li key={`${item.data}-${i}`} className="text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">{item.data}</span>
+                <span className="font-semibold">{item.nota}/1000</span>
+              </div>
+              <div className="mt-1 h-2 w-full rounded-full bg-secondary">
+                <div
+                  className="h-full rounded-full bg-brand-cyan"
+                  style={{ width: `${Math.min(100, (item.nota / 1000) * 100)}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
       ) : (
         <div className="mt-4 h-56 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dados} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
-              <XAxis dataKey="data" tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
-              <YAxis
-                domain={[0, 1000]}
-                ticks={[0, 250, 500, 750, 1000]}
-                tickLine={false}
-                axisLine={false}
-                fontSize={12}
-                stroke="var(--muted-foreground)"
-              />
-              <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }} />
-              <Line
-                type="monotone"
-                dataKey="nota"
-                stroke="var(--brand-cyan)"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "var(--brand-cyan)" }}
-                activeDot={{ r: 6 }}
-                isAnimationActive={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Carregando gráfico...</p>}>
+            <EvolucaoNotaChart dados={dados} />
+          </Suspense>
         </div>
       )}
     </section>
