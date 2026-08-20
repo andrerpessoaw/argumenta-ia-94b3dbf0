@@ -14,7 +14,7 @@ export const gerarTema = createServerFn({ method: "POST" })
       : [],
   }))
   .handler(async ({ data }) => {
-    const apiKey = process.env["OPENAI_API_KEY"];
+    const apiKey = process.env["LOVABLE_API_KEY"];
 
     if (apiKey) {
       try {
