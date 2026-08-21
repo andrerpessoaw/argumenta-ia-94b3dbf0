@@ -35,6 +35,8 @@ type Conteudo = {
 
 function Admin() {
   const { user, isAdmin, carregando } = useSessao();
+  const buscarAcesso = useServerFn(meuAcesso);
+  const [podeConteudos, setPodeConteudos] = useState(false);
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [tipo, setTipo] = useState<"video" | "texto">("video");
   const [titulo, setTitulo] = useState("");
@@ -44,6 +46,13 @@ function Admin() {
   const [ordem, setOrdem] = useState(0);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    void buscarAcesso({ data: undefined })
+      .then((acesso) => setPodeConteudos(acesso.podeGerenciarConteudos))
+      .catch(() => setPodeConteudos(false));
+  }, [buscarAcesso]);
+
 
   async function carregar() {
     const { data } = await supabase
