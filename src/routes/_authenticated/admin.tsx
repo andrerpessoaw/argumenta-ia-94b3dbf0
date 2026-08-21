@@ -1,8 +1,18 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSessao } from "@/hooks/useSessao";
+import {
+  atualizarUsuario,
+  criarUsuario,
+  excluirUsuario,
+  listarUsuarios,
+  meuAcesso,
+  type UsuarioGerenciado,
+} from "@/lib/usuarios.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
