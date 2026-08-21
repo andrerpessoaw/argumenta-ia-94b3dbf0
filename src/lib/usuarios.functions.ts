@@ -191,3 +191,27 @@ export const excluirUsuario = createServerFn({ method: "POST" })
 
     return { ok: true as const };
   });
+
+export const meuAcesso = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: papel }, { data: gerenciado }] = await Promise.all([
+      supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", context.userId)
+        .eq("role", "admin")
+        .maybeSingle(),
+      supabaseAdmin
+        .from("usuarios_gerenciados")
+        .select("pode_gerenciar_conteudos")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
+    ]);
+    const isAdmin = Boolean(papel);
+    return {
+      isAdmin,
+      podeGerenciarConteudos: isAdmin || Boolean(gerenciado?.pode_gerenciar_conteudos),
+    };
+  });
