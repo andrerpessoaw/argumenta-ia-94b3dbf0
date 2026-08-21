@@ -222,6 +222,9 @@ function Admin() {
           ))
         )}
       </section>
+
+      {isAdmin ? <GerenciarUsuarios /> : null}
+
     </div>
   );
 }
