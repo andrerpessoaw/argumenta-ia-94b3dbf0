@@ -104,7 +104,7 @@ function Admin() {
     return <p className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Carregando...</p>;
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !podeConteudos) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold">Acesso restrito</h1>
@@ -112,6 +112,7 @@ function Admin() {
       </div>
     );
   }
+
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
