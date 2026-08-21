@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSessao } from "@/hooks/useSessao";
+import { GerenciarUsuarios } from "@/components/admin/GerenciarUsuarios";
+import { meuAcesso } from "@/lib/usuarios.functions";
+
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -30,6 +35,8 @@ type Conteudo = {
 
 function Admin() {
   const { user, isAdmin, carregando } = useSessao();
+  const buscarAcesso = useServerFn(meuAcesso);
+  const [podeConteudos, setPodeConteudos] = useState(false);
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [tipo, setTipo] = useState<"video" | "texto">("video");
   const [titulo, setTitulo] = useState("");
@@ -39,6 +46,13 @@ function Admin() {
   const [ordem, setOrdem] = useState(0);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    void buscarAcesso({ data: undefined })
+      .then((acesso) => setPodeConteudos(acesso.podeGerenciarConteudos))
+      .catch(() => setPodeConteudos(false));
+  }, [buscarAcesso]);
+
 
   async function carregar() {
     const { data } = await supabase
@@ -90,7 +104,7 @@ function Admin() {
     return <p className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Carregando...</p>;
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !podeConteudos) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
         <h1 className="text-2xl font-semibold">Acesso restrito</h1>
@@ -98,6 +112,7 @@ function Admin() {
       </div>
     );
   }
+
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -207,6 +222,9 @@ function Admin() {
           ))
         )}
       </section>
+
+      {isAdmin ? <GerenciarUsuarios /> : null}
+
     </div>
   );
 }
