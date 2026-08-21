@@ -20,40 +20,22 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [modo, setModo] = useState<"entrar" | "cadastrar">("entrar");
-  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setCarregando(true);
     setErro(null);
-    setAviso(null);
 
     try {
-      if (modo === "entrar") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-        if (error) throw error;
-        void navigate({ to: "/inicio", replace: true });
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password: senha,
-          options: { emailRedirectTo: window.location.origin, data: { nome } },
-        });
-        if (error) throw error;
-        if (data.session) {
-          void navigate({ to: "/inicio", replace: true });
-        } else {
-          setAviso("Conta criada! Confirme seu e-mail para acessar a plataforma.");
-        }
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      if (error) throw error;
+      void navigate({ to: "/inicio", replace: true });
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível continuar.");
+      setErro(error instanceof Error ? error.message : "Não foi possível entrar.");
     } finally {
       setCarregando(false);
     }
