@@ -94,30 +94,9 @@ function AuthPage() {
             <span className="text-sm font-semibold tracking-wide">Argumenta</span>
           </div>
 
-          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 text-sm font-medium">
-            <button
-              type="button"
-              onClick={() => setModo("entrar")}
-              className={`h-9 rounded-lg transition ${modo === "entrar" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setModo("cadastrar")}
-              className={`h-9 rounded-lg transition ${modo === "cadastrar" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
-            >
-              Criar conta
-            </button>
-          </div>
-
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {modo === "entrar" ? "Bem-vindo de volta" : "Comece a treinar hoje"}
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {modo === "entrar"
-              ? "Acesse as aulas, os tutoriais e o laboratório de redação."
-              : "Crie sua conta gratuita e escreva sua primeira redação."}
+            Acesse as aulas, os tutoriais e o laboratório de redação.
           </p>
 
           <button
@@ -150,21 +129,6 @@ function AuthPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {modo === "cadastrar" ? (
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium" htmlFor="nome">
-                  Nome
-                </label>
-                <input
-                  id="nome"
-                  value={nome}
-                  onChange={(event) => setNome(event.target.value)}
-                  className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
-                  placeholder="Seu nome"
-                />
-              </div>
-            ) : null}
-
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="email">
                 E-mail
@@ -190,15 +154,12 @@ function AuthPage() {
                 type="password"
                 required
                 minLength={6}
-                autoComplete={modo === "entrar" ? "current-password" : "new-password"}
+                autoComplete="current-password"
                 value={senha}
                 onChange={(event) => setSenha(event.target.value)}
                 className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
                 placeholder="••••••••"
               />
-              {modo === "cadastrar" ? (
-                <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres.</p>
-              ) : null}
             </div>
 
             {erro ? (
@@ -206,29 +167,20 @@ function AuthPage() {
                 {erro}
               </p>
             ) : null}
-            {aviso ? (
-              <p className="rounded-lg border border-brand-cyan/40 bg-brand-cyan/10 px-3 py-2 text-sm">{aviso}</p>
-            ) : null}
 
             <button
               type="submit"
               disabled={carregando}
               className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-nav text-sm font-medium text-nav-foreground transition hover:opacity-90 disabled:opacity-60"
             >
-              {carregando ? "Aguarde..." : modo === "entrar" ? "Entrar" : "Criar conta"}
+              {carregando ? "Aguarde..." : "Entrar"}
             </button>
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">
-            {modo === "entrar" ? "Ainda não tem conta?" : "Já tem uma conta?"}{" "}
-            <button
-              type="button"
-              onClick={() => setModo(modo === "entrar" ? "cadastrar" : "entrar")}
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              {modo === "entrar" ? "Criar conta" : "Entrar"}
-            </button>
+            As contas são criadas pelo administrador da plataforma. Peça seu acesso a ele.
           </p>
+
         </div>
       </section>
     </main>
