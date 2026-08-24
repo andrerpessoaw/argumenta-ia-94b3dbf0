@@ -54,12 +54,7 @@ function Landing() {
           >
             Entrar na plataforma
           </button>
-          <Link
-            to="/auth"
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium transition hover:bg-accent"
-          >
-            Criar conta
-          </Link>
+
         </div>
       </div>
     </main>
