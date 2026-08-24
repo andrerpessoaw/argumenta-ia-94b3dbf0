@@ -1,0 +1,9 @@
+[build]
+  command = "npm install && npm run build"
+  publish = ".output/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Garante que o Nitro (motor de build do TanStack Start) gere saída para
+  # Netlify Functions em vez do preset padrão (cloudflare) definido no template da Lovable.
+  NITRO_PRESET = "netlify"

@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Hospedagem fora da Lovable (Netlify): sobrescreve o preset padrão (cloudflare) do Nitro.
+  // Também é forçado via variável de ambiente NITRO_PRESET=netlify no netlify.toml,
+  // como garantia caso esta chave não seja repassada por este wrapper.
+  nitro: {
+    preset: "netlify",
+  },
 });
