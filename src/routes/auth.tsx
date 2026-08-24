@@ -122,8 +122,8 @@ function AuthPage() {
                 type="email"
                 required
                 autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                ref={emailRef}
+                defaultValue=""
                 className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
                 placeholder="voce@email.com"
               />
@@ -139,26 +139,27 @@ function AuthPage() {
                 required
                 minLength={6}
                 autoComplete="current-password"
-                value={senha}
-                onChange={(event) => setSenha(event.target.value)}
+                ref={senhaRef}
+                defaultValue=""
                 className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
                 placeholder="••••••••"
               />
             </div>
 
-            {erro ? (
+            {estado.erro ? (
               <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {erro}
+                {estado.erro}
               </p>
             ) : null}
 
             <button
               type="submit"
-              disabled={carregando}
+              disabled={estado.carregando}
               className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-nav text-sm font-medium text-nav-foreground transition hover:opacity-90 disabled:opacity-60"
             >
-              {carregando ? "Aguarde..." : "Entrar"}
+              {estado.carregando ? "Aguarde..." : "Entrar"}
             </button>
+
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">
