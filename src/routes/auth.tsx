@@ -30,16 +30,26 @@ function AuthPage() {
     erro: null,
   });
 
-  // Checagem única de sessão ao montar (sem listener, sem polling).
+  // Checagem única de sessão ao montar (sem listener, sem polling, sem depender de `navigate`).
+  const jaChecou = useRef(false);
   useEffect(() => {
+    if (jaChecou.current) return;
+    jaChecou.current = true;
     let ativo = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (ativo && data.session) void navigate({ to: "/inicio", replace: true });
+    // Se a leitura da sessão demorar (rede/armazenamento lento), simplesmente segue no formulário.
+    const comLimite = Promise.race([
+      supabase.auth.getSession().then(({ data }) => data.session),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
+    void comLimite.then((sessao) => {
+      if (ativo && sessao) window.location.replace("/inicio");
     });
     return () => {
       ativo = false;
     };
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
