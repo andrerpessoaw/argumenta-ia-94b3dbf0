@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
+
 
 
 export const Route = createFileRoute("/auth")({
@@ -20,26 +21,46 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  // Campos não controlados: zero re-render por tecla digitada (Chromebooks fracos).
+  const emailRef = useRef<HTMLInputElement>(null);
+  const senhaRef = useRef<HTMLInputElement>(null);
+  // Um único estado para a tela toda, evitando cascatas de atualização.
+  const [estado, setEstado] = useState<{ carregando: boolean; erro: string | null }>({
+    carregando: false,
+    erro: null,
+  });
+
+  // Checagem única de sessão ao montar (sem listener, sem polling).
+  useEffect(() => {
+    let ativo = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (ativo && data.session) void navigate({ to: "/inicio", replace: true });
+    });
+    return () => {
+      ativo = false;
+    };
+  }, [navigate]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setCarregando(true);
-    setErro(null);
+    if (estado.carregando) return;
+    setEstado({ carregando: true, erro: null });
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailRef.current?.value.trim() ?? "",
+        password: senhaRef.current?.value ?? "",
+      });
       if (error) throw error;
       void navigate({ to: "/inicio", replace: true });
     } catch (error) {
-      setErro(error instanceof Error ? error.message : "Não foi possível entrar.");
-    } finally {
-      setCarregando(false);
+      setEstado({
+        carregando: false,
+        erro: error instanceof Error ? error.message : "Não foi possível entrar.",
+      });
     }
   }
+
 
 
   return (
@@ -101,8 +122,8 @@ function AuthPage() {
                 type="email"
                 required
                 autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                ref={emailRef}
+                defaultValue=""
                 className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
                 placeholder="voce@email.com"
               />
@@ -118,26 +139,27 @@ function AuthPage() {
                 required
                 minLength={6}
                 autoComplete="current-password"
-                value={senha}
-                onChange={(event) => setSenha(event.target.value)}
+                ref={senhaRef}
+                defaultValue=""
                 className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:border-brand-indigo"
                 placeholder="••••••••"
               />
             </div>
 
-            {erro ? (
+            {estado.erro ? (
               <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {erro}
+                {estado.erro}
               </p>
             ) : null}
 
             <button
               type="submit"
-              disabled={carregando}
+              disabled={estado.carregando}
               className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-nav text-sm font-medium text-nav-foreground transition hover:opacity-90 disabled:opacity-60"
             >
-              {carregando ? "Aguarde..." : "Entrar"}
+              {estado.carregando ? "Aguarde..." : "Entrar"}
             </button>
+
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">
